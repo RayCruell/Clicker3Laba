@@ -14,11 +14,16 @@ namespace Clicker3Laba
 {
     public partial class MainWindow : Window
     {
-        private Controller gameController;
+        private CController gameController;
+        private CPlayer gamePlayer;
         private DispatcherTimer gameTimer;
         private double gameTimeLeft = 60;
         private bool gameStarted = false;
         private double totalPointsLost = 0; // Счетчик потерянных очков
+        private DateTime lastTickTime;
+        private double spawnRate = 2.0;
+        private double minLifetime = 1.0;
+        private double maxLifetime = 5.0;
 
         public MainWindow()
         {
@@ -38,15 +43,13 @@ namespace Clicker3Laba
 
         private void InitializeGame()
         {
-            //Временные размеры
-            gameController = new Controller(
-                spawnRate: 1.5, 
-                startTime: 0,
-                sceneSize: new Size(600, 400) 
-            );
+            // Убираем параметры spawnRate, startTime, sceneSize
+            gameController = new CController(); // просто пустой конструктор
+            gamePlayer = new CPlayer();
 
+            // Настройка таймера игры
             gameTimer = new DispatcherTimer();
-            gameTimer.Interval = TimeSpan.FromSeconds(1); //Обратный отсчёт по секунде
+            gameTimer.Interval = TimeSpan.FromSeconds(1); // 1 секунда
             gameTimer.Tick += GameTimer_Tick;
 
             UpdateUI();
@@ -70,10 +73,9 @@ namespace Clicker3Laba
             gameTimeLeft = 60;
             totalPointsLost = 0;
             startButton.Content = "STOP";
-            gameTimer.Start();
 
-            // Обновляем реальные размеры канваса
-            gameController.UpdateSceneSize(new Size(gameCanvas.ActualWidth, gameCanvas.ActualHeight));
+            lastTickTime = DateTime.Now;
+            gameTimer.Start();
 
             AddLog("Game started! Click the circles!");
         }
@@ -94,19 +96,77 @@ namespace Clicker3Laba
         {
             if (gameStarted)
             {
-                gameController.update(1.0);
+                gamePlayer.update(1.0);
 
-                gameTimeLeft -= 1.0; 
+                // ДОБАВЛЯЕМ СПАВН ОБЪЕКТОВ!
+                SpawnRandomObject();
 
+                // Обновление времени жизни объектов
+                var objectsToUpdate = new List<CCollectable>(gameController.getObjects());
+                foreach (var obj in objectsToUpdate)
+                {
+                    if (obj.updateLifetime(1.0))
+                    {
+                        gameController.removeObject(obj);
+                    }
+                }
+
+                gameTimeLeft -= 1.0;
                 if (gameTimeLeft <= 0)
                 {
-                    gameTimeLeft = 0;
                     EndGame();
                     return;
                 }
 
                 RenderObjects();
                 UpdateUI();
+            }
+        }
+
+        private Random rng = new Random();
+        private double spawnTimer = 0;
+
+        private void SpawnRandomObject()
+        {
+            spawnTimer += 1.0;
+
+            if (spawnTimer >= 2.0) // Спавним каждые 2 секунды
+            {
+                spawnTimer = 0;
+
+                // Случайная позиция на канвасе
+                double x = rng.NextDouble() * (gameCanvas.ActualWidth - 30);
+                double y = rng.NextDouble() * (gameCanvas.ActualHeight - 30);
+                Point position = new Point(x, y);
+
+                // Случайный размер и время жизни
+                double size = 10 + (rng.NextDouble() * 10);
+                double lifetime = minLifetime + (rng.NextDouble() * (maxLifetime - minLifetime));
+
+                // Создаем случайный тип объекта
+                CCollectable newObj;
+                int type = rng.Next(0, 4); // 0-3
+
+                switch (type)
+                {
+                    case 0:
+                        newObj = new CPointGiver(position, size, lifetime, 10);
+                        break;
+                    case 1:
+                        newObj = new CClickSpeedUp(position, size, lifetime, 0.8);
+                        break;
+                    case 2:
+                        newObj = new CLifetimeChanger(position, size, lifetime, 1.5);
+                        break;
+                    case 3:
+                        newObj = new CSpawnRateChanger(position, size, lifetime, 0.7);
+                        break;
+                    default:
+                        newObj = new CPointGiver(position, size, lifetime, 10);
+                        break;
+                }
+
+                gameController.addObject(newObj);
             }
         }
 
@@ -126,20 +186,47 @@ namespace Clicker3Laba
             if (!gameStarted) return;
 
             var mousePosition = e.GetPosition(gameCanvas);
-            double pointsBefore = gameController.getPoints();
-            gameController.mouseClick(mousePosition);
-            double pointsAfter = gameController.getPoints();
 
-            if (pointsAfter > pointsBefore)
+            foreach (var obj in gameController.getObjects())
             {
-                AddLog($"+{(pointsAfter - pointsBefore):F1} points!");
+                if (obj.onClick(gamePlayer, gameController, mousePosition))
+                {
+                    // Обрабатываем разные типы объектов
+                    if (obj is CPointGiver)
+                    {
+                        AddLog($"Collected points! +10 points");
+                    }
+                    else if (obj is CClickSpeedUp speedUp)
+                    {
+                        AddLog($"Click speed increased!");
+                        // speedUp уже сам вызывает player.increaseSpeed()
+                    }
+                    else if (obj is CLifetimeChanger lifetimeChanger)
+                    {
+                        // Увеличиваем время жизни объектов
+                        minLifetime *= lifetimeChanger.GetLifetimeModifier();
+                        maxLifetime *= lifetimeChanger.GetLifetimeModifier();
+                        AddLog($"Lifetime increased to: {minLifetime:F1}-{maxLifetime:F1}s");
+                    }
+                    else if (obj is CSpawnRateChanger spawnRateChanger)
+                    {
+                        // Уменьшаем время между спавном
+                        spawnRate = Math.Max(0.5, spawnRate * spawnRateChanger.GetSpawnRateModifier());
+                        AddLog($"Spawn rate decreased to: {spawnRate:F1}s");
+                    }
+
+                    gameController.removeObject(obj);
+                    break;
+                }
             }
+
+            UpdateUI();
         }
 
         private void UpdateUI()
         {
             scoreText.Text = gameController.getPoints().ToString("F1");
-            timeText.Text = gameTimeLeft > 0 ? Math.Ceiling(gameTimeLeft).ToString("0") : "0";
+            timeText.Text = Math.Ceiling(gameTimeLeft).ToString("0");
         }
 
         private void AddLog(string message)

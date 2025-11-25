@@ -1,52 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace Clicker3Laba
 {
-    public class CObject
+    public abstract class CCollectable
     {
-        private Point position { get; set; }
-        private Size size { get; set; }
-        private double lifetime { get; set; }
-        private double pointsValue { get; set; }
-        private Ellipse sprite { get; set; }
+        private Point position; //позиция собираемого объекта в сцене
+        protected Size size; //размер собираемого объекта
+        private double lifetime; //время жизни собираемого объекта
+        protected Ellipse sprite; //визуальное отображение собираемого объекта
 
-        public CObject(Point position, double size, double lifetime)
+        public CCollectable(Point position, double size, double lifetime) //конструктор
         {
             this.position = position;
             this.size = new Size(size, size);
             this.lifetime = lifetime;
 
-            //Создание кружка
             sprite = new Ellipse();
 
-            //Внешний вид кружка
             sprite.Fill = Brushes.BlueViolet;
             sprite.StrokeThickness = 2;
             sprite.Stroke = Brushes.Black;
 
-            //Центрирование
             sprite.HorizontalAlignment = HorizontalAlignment.Center;
             sprite.VerticalAlignment = VerticalAlignment.Center;
 
-            //Размеры
             sprite.Width = this.size.Width;
             sprite.Height = this.size.Height;
-
-            //Расположение на канвасе
             sprite.RenderTransform = new TranslateTransform(position.X, position.Y);
-
-            //Расчёт очков
-            pointsValue = ((1 / this.size.Width) / lifetime) * 1000;
         }
 
-        //Проверка наведения мыши
+        // Методы для работы с объектом
         public bool isMouseOnObject(Point mousePosition)
         {
             return mousePosition.X >= position.X &&
@@ -55,23 +40,18 @@ namespace Clicker3Laba
                    mousePosition.Y <= position.Y + size.Height;
         }
 
-        //Получение спрайта
         public Ellipse getSprite()
         {
             return sprite;
         }
 
-        //Получение значения очков
-        public double getPointsValue()
-        {
-            return pointsValue;
-        }
-
-        //Обновление времени
         public bool updateLifetime(double delta)
         {
             lifetime -= delta;
             return lifetime <= 0;
         }
+
+        // Абстрактная функция отработки нажатия на объект
+        public abstract bool onClick(CPlayer player, CController controller, Point mousePosition);
     }
 }
