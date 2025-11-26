@@ -10,7 +10,7 @@ namespace Clicker3Laba
 {
     public class CClickSpeedUp : CCollectable
     {
-        private double speedModifier; // приватное поле
+        private double speedModifier;
 
         public CClickSpeedUp(Point position, double size, double lifetime, double speedModifier)
             : base(position, size, lifetime)

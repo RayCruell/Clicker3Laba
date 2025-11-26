@@ -6,12 +6,12 @@ namespace Clicker3Laba
 {
     public abstract class CCollectable
     {
-        private Point position; //позиция собираемого объекта в сцене
-        protected Size size; //размер собираемого объекта
-        private double lifetime; //время жизни собираемого объекта
-        protected Ellipse sprite; //визуальное отображение собираемого объекта
+        private Point position; //Позиция собираемого объекта в сцене
+        protected Size size; //Размер собираемого объекта
+        private double lifetime; //Время жизни собираемого объекта
+        protected Ellipse sprite; //Визуальное отображение собираемого объекта
 
-        public CCollectable(Point position, double size, double lifetime) //конструктор
+        public CCollectable(Point position, double size, double lifetime) //Конструктор
         {
             this.position = position;
             this.size = new Size(size, size);
@@ -31,7 +31,7 @@ namespace Clicker3Laba
             sprite.RenderTransform = new TranslateTransform(position.X, position.Y);
         }
 
-        // Методы для работы с объектом
+        //Методы для работы с объектом
         public bool isMouseOnObject(Point mousePosition)
         {
             return mousePosition.X >= position.X &&
@@ -51,7 +51,7 @@ namespace Clicker3Laba
             return lifetime <= 0;
         }
 
-        // Абстрактная функция отработки нажатия на объект
+        //Абстрактная функция отработки нажатия на объект
         public abstract bool onClick(CPlayer player, CController controller, Point mousePosition);
     }
 }

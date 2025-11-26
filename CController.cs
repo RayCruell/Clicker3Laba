@@ -10,7 +10,7 @@ namespace Clicker3Laba
     public class CController
     {
         private List<CCollectable> objects;
-        private double points; // Добавляем поле для очков
+        private double points;
 
         public CController()
         {

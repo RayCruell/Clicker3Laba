@@ -25,7 +25,6 @@ namespace Clicker3Laba
         {
             if (canClick)
             {
-                // Логика клика будет дополнена позже
                 canClick = false;
                 countdownTimer.Start(timeBeforeClick);
             }

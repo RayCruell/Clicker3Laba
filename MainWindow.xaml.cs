@@ -43,13 +43,12 @@ namespace Clicker3Laba
 
         private void InitializeGame()
         {
-            // Убираем параметры spawnRate, startTime, sceneSize
-            gameController = new CController(); // просто пустой конструктор
+            gameController = new CController(); 
             gamePlayer = new CPlayer();
 
-            // Настройка таймера игры
+            //Настройка таймера игры
             gameTimer = new DispatcherTimer();
-            gameTimer.Interval = TimeSpan.FromSeconds(1); // 1 секунда
+            gameTimer.Interval = TimeSpan.FromSeconds(1);
             gameTimer.Tick += GameTimer_Tick;
 
             UpdateUI();
@@ -98,10 +97,8 @@ namespace Clicker3Laba
             {
                 gamePlayer.update(1.0);
 
-                // ДОБАВЛЯЕМ СПАВН ОБЪЕКТОВ!
                 SpawnRandomObject();
 
-                // Обновление времени жизни объектов
                 var objectsToUpdate = new List<CCollectable>(gameController.getObjects());
                 foreach (var obj in objectsToUpdate)
                 {
@@ -130,22 +127,22 @@ namespace Clicker3Laba
         {
             spawnTimer += 1.0;
 
-            if (spawnTimer >= 2.0) // Спавним каждые 2 секунды
+            if (spawnTimer >= 2.0) 
             {
                 spawnTimer = 0;
 
-                // Случайная позиция на канвасе
+                //Случайная позиция на канвасе
                 double x = rng.NextDouble() * (gameCanvas.ActualWidth - 30);
                 double y = rng.NextDouble() * (gameCanvas.ActualHeight - 30);
                 Point position = new Point(x, y);
 
-                // Случайный размер и время жизни
+                //Случайный размер и время жизни
                 double size = 10 + (rng.NextDouble() * 10);
                 double lifetime = minLifetime + (rng.NextDouble() * (maxLifetime - minLifetime));
 
-                // Создаем случайный тип объекта
+                //Создаем случайный тип объекта
                 CCollectable newObj;
-                int type = rng.Next(0, 4); // 0-3
+                int type = rng.Next(0, 4);
 
                 switch (type)
                 {
@@ -191,28 +188,25 @@ namespace Clicker3Laba
             {
                 if (obj.onClick(gamePlayer, gameController, mousePosition))
                 {
-                    // Обрабатываем разные типы объектов
+                    //Обрабатываем разные типы объектов
                     if (obj is CPointGiver)
                     {
-                        AddLog($"Collected points! +10 points");
+                        AddLog($"Собраны очки!");
                     }
                     else if (obj is CClickSpeedUp speedUp)
                     {
-                        AddLog($"Click speed increased!");
-                        // speedUp уже сам вызывает player.increaseSpeed()
+                        AddLog($"Скорость клика увеличина");
                     }
                     else if (obj is CLifetimeChanger lifetimeChanger)
                     {
-                        // Увеличиваем время жизни объектов
                         minLifetime *= lifetimeChanger.GetLifetimeModifier();
                         maxLifetime *= lifetimeChanger.GetLifetimeModifier();
-                        AddLog($"Lifetime increased to: {minLifetime:F1}-{maxLifetime:F1}s");
+                        AddLog($"Врем жизни увеличено до: {minLifetime:F1}-{maxLifetime:F1}с");
                     }
                     else if (obj is CSpawnRateChanger spawnRateChanger)
                     {
-                        // Уменьшаем время между спавном
                         spawnRate = Math.Max(0.5, spawnRate * spawnRateChanger.GetSpawnRateModifier());
-                        AddLog($"Spawn rate decreased to: {spawnRate:F1}s");
+                        AddLog($"Скорость появления уменьшилась до: {spawnRate:F1}с");
                     }
 
                     gameController.removeObject(obj);

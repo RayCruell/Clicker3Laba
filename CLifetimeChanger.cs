@@ -23,8 +23,6 @@ namespace Clicker3Laba
         {
             if (!isMouseOnObject(mousePosition))
                 return false;
-
-            // Просто возвращаем true - логика будет в MainWindow
             return true;
         }
 
